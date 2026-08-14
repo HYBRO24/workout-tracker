@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Прогресія — HYBRO Workout Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0A0A0A;
+    --card: #141414;
+    --border: #262626;
+    --chalk: #FFFFFF;
+    --dim: #8C8C8C;
+    --brass: #E4002B;
+    --rust: #7A0018;
+    --line: #262626;
+    --up: #3ED598;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--chalk);
+    padding: 20px 16px 40px;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+
+  .header { position: relative; padding-left: 16px; margin-bottom: 20px; }
+  .header .slash {
+    position: absolute; left: 0; top: 2px; bottom: 2px; width: 8px;
+    background: var(--brass); transform: skewX(-12deg);
+  }
+  .header .row { display: flex; align-items: center; justify-content: space-between; }
+  .header h1 {
+    font-family: 'Oswald', sans-serif; font-size: 34px; font-weight: 700;
+    letter-spacing: 0.5px; text-transform: uppercase; line-height: 1; margin: 0;
+  }
+  .header p { color: var(--dim); font-size: 12.5px; margin: 6px 0 0; font-weight: 500; }
+  .header p b { color: var(--chalk); font-weight: 700; }
+
+  .day-header { display: flex; align-items: center; gap: 12px; margin: 24px 0 12px; }
+  .day-header:first-of-type { margin-top: 0; }
+  .day-tag {
+    background: var(--brass); color: #fff; font-family: 'Oswald', sans-serif;
+    font-size: 12.5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    padding: 4px 10px;
+  }
+  .day-header .rule { flex: 1; height: 1px; background: var(--border); }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--brass);
+    border-radius: 2px; margin-bottom: 12px; overflow: hidden;
+  }
+  .card.open { border-color: var(--brass); }
+  .card-head {
+    width: 100%; background: transparent; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; color: inherit; font: inherit;
+  }
+  .card-head .left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .card-head .icon { flex-shrink: 0; display: flex; }
+  .card-head .name {
+    font-family: 'Inter', sans-serif; font-weight: 800; font-size: 13px;
+    letter-spacing: 0.1px; text-transform: uppercase; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; text-align: left;
+  }
+  .card-head .right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+  .card-head .weight { text-align: right; }
+  .card-head .weight .num { font-family: 'Bebas Neue', sans-serif; font-size: 26px; line-height: 1; letter-spacing: 0.5px; }
+  .card-head .weight .unit { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 800; color: var(--brass); margin-left: 3px; }
+  .card-head .weight .delta { font-size: 11px; margin-top: 2px; }
+  .chevron { transition: transform 0.15s; color: var(--dim); }
+  .card.open .chevron { transform: rotate(180deg); }
+
+  .card-body { padding: 0 16px 16px; display: none; }
+  .card.open .card-body { display: block; }
+
+  .barbell { display: flex; align-items: center; height: 28px; margin-bottom: 6px; }
+  .barbell .hub { width: 14px; height: 6px; background: var(--dim); border-radius: 2px; }
+  .barbell .plate { margin-left: 1.5px; border-radius: 2px; }
+  .barbell .rail { flex: 1; height: 4px; background: var(--line); margin-left: 2px; }
+
+  .chart-empty { height: 70px; color: var(--dim); font-size: 12px; display: flex; align-items: center; justify-content: center; font-style: italic; }
+  .chart { width: 100%; height: 90px; }
+
+  form.log-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; margin-top: 12px; }
+  .field { display: flex; flex-direction: column; }
+  .field label { font-size: 10px; color: var(--dim); margin-bottom: 3px; }
+  .field input, .field select {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 2px;
+    padding: 6px 8px; color: var(--chalk); font-size: 12.5px; font-family: inherit;
+  }
+  .field input:focus, .field select:focus { outline: 1px solid var(--brass); }
+  .w-date { width: 118px; }
+  .w-weight { width: 90px; }
+  .w-reps { width: 78px; }
+
+  .btn {
+    border: none; border-radius: 2px; cursor: pointer; font-family: 'Oswald', sans-serif;
+    letter-spacing: 0.5px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 5px;
+  }
+  .btn-primary { background: var(--brass); color: #fff; padding: 7px 14px; font-size: 12px; font-weight: 700; }
+  .btn-ghost {
+    margin-left: auto; background: transparent; border: 1px solid var(--border); color: var(--dim);
+    padding: 7px 9px; border-radius: 2px; cursor: pointer;
+  }
+  .btn-outline {
+    border: 2px solid var(--brass); background: transparent; color: var(--chalk);
+    border-radius: 2px; padding: 13px; font-size: 13px; font-weight: 700; cursor: pointer;
+    width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-cancel {
+    background: none; border: 1px solid var(--border); border-radius: 2px; padding: 8px 10px;
+    color: var(--dim); cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px;
+  }
+
+  .history-toggle { font-size: 11.5px; color: var(--dim); background: none; border: none; cursor: pointer; margin-top: 12px; padding: 0; }
+  .history-list { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+  .history-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; padding: 4px 8px; background: var(--bg); border-radius: 5px; }
+  .history-row .d { color: var(--dim); }
+  .history-row .del { background: none; border: none; color: var(--dim); cursor: pointer; display: flex; }
+
+  .add-form {
+    background: var(--card); border: 1px solid var(--border); border-radius: 2px; padding: 14px;
+    display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap;
+  }
+  .add-form .field.grow { flex: 1; min-width: 160px; }
+  .add-form .w-day { width: 118px; }
+  .add-form .w-unit { width: 74px; }
+
+  .empty-state { border: 1px dashed var(--border); border-radius: 2px; padding: 24px; text-align: center; color: var(--dim); font-size: 13px; }
+
+  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7); }
+</style>
+</head>
+<body>
+  <div class="wrap" id="app"></div>
+
+<script>
+const STORAGE_KEY = "hybro-workout-data";
+const DAY_ORDER = ["Понеділок", "Середа", "П'ятниця", "Інше"];
+
+function uid() { return Math.random().toString(36).slice(2, 10); }
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function fmtDate(d) {
+  const dt = new Date(d + "T00:00:00");
+  return dt.toLocaleDateString("uk-UA", { day: "2-digit", month: "short" });
+}
+function esc(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ---------- дані ----------
+function seedExercises() {
+  const mk = (name, day) => ({ id: uid(), name, unit: "кг", day });
+  const monday = [
+    "Жим штанги на похилій лаві",
+    "Жим гантелей на похилій лаві",
+    "Підтягування на турніку широким хватом з обтяженням",
+    "Розведення гантелей на похилій лаві",
+    "Горизонтальна/вертикальна тяга в блоковому тренажері",
+    "Зведення рук у кросовер",
+    "Прес нахил в блоці",
+  ].map((n) => mk(n, "Понеділок"));
+  const wednesday = [
+    "Жим штанги на трицепс",
+    "Згинання рук зі штангою",
+    "Розгинання рук на блоці",
+    "Згинання рук зі штангою зворотним хватом",
+    "Згинання кистей з гантелями",
+    "Підйом ніг у висі",
+  ].map((n) => mk(n, "Середа"));
+  const friday = [
+    "Жим гантелей сидячи",
+    "Тяга штанги в нахилі за спиною",
+    "Відведення рук з гантелями в сторони",
+    "Присідання з поясом",
+    "Жим ногами в тренажері",
+    "Розгинання ніг у тренажері сидячи",
+    "Згинання ніг у тренажері",
+    "Підйом на носки",
+    "Прес нахил в блоці",
+  ].map((n) => mk(n, "П'ятниця"));
+  const exercises = [...monday, ...wednesday, ...friday];
+  const logs = {};
+  exercises.forEach((e) => (logs[e.id] = []));
+  return { exercises, logs };
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  const seeded = seedExercises();
+  saveData(seeded);
+  return seeded;
+}
+function saveData(data) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.error("Storage error", e);
+  }
+}
+
+let data = loadData();
+let openCards = new Set();
+let openHistory = new Set();
+
+// ---------- патерн вправи -> іконка ----------
+function getExercisePattern(name) {
+  const n = (name || "").toLowerCase();
+  if (n.includes("ногами")) return "leg-press";
+  if (n.includes("носк")) return "calf-raise";
+  if (n.includes("присід")) return "squat";
+  if (n.includes("ніг") && n.includes("розгинання")) return "leg-extension";
+  if (n.includes("ніг") && n.includes("згинання")) return "leg-curl";
+  if (n.includes("висі")) return "hanging-leg-raise";
+  if (n.includes("прес")) return "core-crunch";
+  if (n.includes("підтягування")) return "pull-up";
+  if (n.includes("кросовер") || n.includes("розведення")) return "fly";
+  if (n.includes("тяга") && n.includes("нахил")) return "bent-over-row";
+  if (n.includes("тяга")) return "row";
+  if (n.includes("кистей")) return "wrist-curl";
+  if (n.includes("розгинання") && n.includes("рук")) return "triceps-pushdown";
+  if (n.includes("зворотним")) return "reverse-curl";
+  if (n.includes("згинання") && n.includes("рук")) return "bicep-curl";
+  if (n.includes("трицепс") && n.includes("жим")) return "triceps-press";
+  if (n.includes("трицепс")) return "triceps-pushdown";
+  if (n.includes("відведення")) return "lateral-raise";
+  if (n.includes("сидячи") && n.includes("жим")) return "shoulder-press";
+  if (n.includes("гантел") && n.includes("жим")) return "press-dumbbell";
+  if (n.includes("штанг") && n.includes("жим")) return "press-barbell";
+  if (n.includes("жим")) return "press-barbell";
+  return null;
+}
+
+const ICON_SHAPES = {
+  "press-barbell": `<line x1="5" y1="5" x2="19" y2="5"/><circle cx="5" cy="5" r="1.8" fill="currentColor" stroke="none"/><circle cx="19" cy="5" r="1.8" fill="currentColor" stroke="none"/><line x1="9" y1="6" x2="9.5" y2="15"/><line x1="15" y1="6" x2="14.5" y2="15"/><line x1="6" y1="19" x2="18" y2="19"/>`,
+  "press-dumbbell": `<circle cx="5" cy="6" r="1.6" fill="currentColor" stroke="none"/><line x1="6.6" y1="6" x2="9.4" y2="6"/><circle cx="11" cy="6" r="1.6" fill="currentColor" stroke="none"/><circle cx="13" cy="6" r="1.6" fill="currentColor" stroke="none"/><line x1="14.6" y1="6" x2="17.4" y2="6"/><circle cx="19" cy="6" r="1.6" fill="currentColor" stroke="none"/><line x1="6" y1="19" x2="18" y2="19"/>`,
+  "pull-up": `<line x1="4" y1="5" x2="20" y2="5"/><line x1="9" y1="5" x2="10" y2="13"/><line x1="15" y1="5" x2="14" y2="13"/><circle cx="12" cy="16" r="2.2"/>`,
+  "fly": `<circle cx="4" cy="10" r="1.8" fill="currentColor" stroke="none"/><circle cx="20" cy="10" r="1.8" fill="currentColor" stroke="none"/><path d="M5 9 Q12 16 19 9"/><line x1="12" y1="13" x2="12" y2="20"/>`,
+  "row": `<path d="M3 6 L3 14 L7.5 10 Z" fill="currentColor" stroke="none"/><line x1="7.5" y1="10" x2="14" y2="10"/><path d="M13 7 L18 10 L13 13"/>`,
+  "bent-over-row": `<line x1="5" y1="6" x2="14" y2="16"/><line x1="9" y1="18" x2="19" y2="18"/><circle cx="9" cy="18" r="1.7" fill="currentColor" stroke="none"/><circle cx="19" cy="18" r="1.7" fill="currentColor" stroke="none"/><path d="M14 15 L14 11"/><path d="M12.5 12.5 L14 11 L15.5 12.5"/>`,
+  "core-crunch": `<path d="M9 3 L9 8 L13.5 5 Z" fill="currentColor" stroke="none"/><circle cx="12" cy="9.5" r="1.7"/><path d="M12 11.5 Q8.5 16 11.5 20"/>`,
+  "hanging-leg-raise": `<line x1="6" y1="4" x2="18" y2="4"/><line x1="12" y1="4" x2="12" y2="14"/><path d="M12 14 L18.5 11"/><path d="M16.3 12.6 L18.5 11 L17.6 8.8"/>`,
+  "triceps-press": `<line x1="8" y1="5" x2="16" y2="5"/><circle cx="8" cy="5" r="1.7" fill="currentColor" stroke="none"/><circle cx="16" cy="5" r="1.7" fill="currentColor" stroke="none"/><line x1="10" y1="6" x2="10.5" y2="15"/><line x1="14" y1="6" x2="13.5" y2="15"/><line x1="6" y1="19" x2="18" y2="19"/>`,
+  "bicep-curl": `<line x1="8" y1="17" x2="16" y2="17"/><circle cx="8" cy="17" r="1.7" fill="currentColor" stroke="none"/><circle cx="16" cy="17" r="1.7" fill="currentColor" stroke="none"/><path d="M12 17 Q6.5 10 10 5"/><path d="M8.3 6.3 L10 5 L11 7.2"/>`,
+  "reverse-curl": `<line x1="8" y1="17" x2="16" y2="17"/><circle cx="8" cy="17" r="1.7" fill="currentColor" stroke="none"/><circle cx="16" cy="17" r="1.7" fill="currentColor" stroke="none"/><line x1="12" y1="15.3" x2="12" y2="18.7"/><path d="M12 17 Q6.5 10 10 5"/><path d="M8.3 6.3 L10 5 L11 7.2"/>`,
+  "triceps-pushdown": `<path d="M9 2 L9 7 L13.5 4.5 Z" fill="currentColor" stroke="none"/><line x1="8" y1="8" x2="16" y2="8"/><circle cx="8" cy="8" r="1.4" fill="currentColor" stroke="none"/><circle cx="16" cy="8" r="1.4" fill="currentColor" stroke="none"/><path d="M12 9 L12 17"/><path d="M10 15 L12 17 L14 15"/>`,
+  "wrist-curl": `<circle cx="8" cy="14" r="1.7" fill="currentColor" stroke="none"/><line x1="9.6" y1="14" x2="14.4" y2="14"/><circle cx="16" cy="14" r="1.7" fill="currentColor" stroke="none"/><path d="M12 10.5 a3 3 0 1 1 -2.6 1.5"/><path d="M8.5 10.7 L9.4 11.9 L10.5 10.8"/>`,
+  "shoulder-press": `<line x1="4" y1="14" x2="20" y2="14"/><circle cx="8" cy="6" r="1.7" fill="currentColor" stroke="none"/><line x1="9.6" y1="6" x2="14.4" y2="6"/><circle cx="16" cy="6" r="1.7" fill="currentColor" stroke="none"/><path d="M12 11 L12 16"/><path d="M10 13 L12 11 L14 13"/>`,
+  "lateral-raise": `<line x1="12" y1="8" x2="12" y2="19"/><circle cx="4" cy="11" r="1.7" fill="currentColor" stroke="none"/><circle cx="20" cy="11" r="1.7" fill="currentColor" stroke="none"/><path d="M10 17 Q4.5 14.5 4.5 9.5"/><path d="M14 17 Q19.5 14.5 19.5 9.5"/>`,
+  "squat": `<line x1="8" y1="4" x2="16" y2="4"/><circle cx="8" cy="4" r="1.7" fill="currentColor" stroke="none"/><circle cx="16" cy="4" r="1.7" fill="currentColor" stroke="none"/><line x1="12" y1="4" x2="12" y2="11"/><path d="M8 20 L12 11 L16 20"/>`,
+  "leg-press": `<line x1="3" y1="20" x2="10" y2="20"/><line x1="10" y1="20" x2="10" y2="9"/><line x1="10" y1="12" x2="18" y2="12"/><rect x="18" y="6" width="3" height="12" fill="currentColor" stroke="none"/>`,
+  "leg-extension": `<line x1="4" y1="18" x2="10" y2="18"/><line x1="10" y1="18" x2="10" y2="8"/><path d="M10 14 L18 9.5"/><path d="M15.7 10.3 L18 9.5 L17.7 12"/>`,
+  "leg-curl": `<line x1="4" y1="10" x2="14" y2="10"/><path d="M14 10 Q19.5 10 18.5 16.5"/><path d="M16.6 14.7 L18.5 16.5 L19.3 14.5"/>`,
+  "calf-raise": `<line x1="6" y1="17" x2="18" y2="17"/><path d="M9 17 L9 10 L14 10 L14 17"/><path d="M12 8 L12 3"/><path d="M10 5 L12 3 L14 5"/>`,
+};
+const FALLBACK_ICON = `<circle cx="7" cy="17" r="2.2" fill="currentColor" stroke="none"/><line x1="9" y1="17" x2="15" y2="17"/><circle cx="17" cy="17" r="2.2" fill="currentColor" stroke="none"/>`;
+
+function iconSVG(pattern, size, color) {
+  const shape = ICON_SHAPES[pattern] || FALLBACK_ICON;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${shape}</svg>`;
+}
+
+// ---------- дії ----------
+function addExercise(name, day, unit) {
+  const ex = { id: uid(), name, unit, day };
+  data.exercises.push(ex);
+  data.logs[ex.id] = [];
+  saveData(data);
+  render();
+}
+function deleteExercise(exId) {
+  data.exercises = data.exercises.filter((e) => e.id !== exId);
+  delete data.logs[exId];
+  saveData(data);
+  render();
+}
+function addLog(exId, log) {
+  data.logs[exId] = data.logs[exId] || [];
+  data.logs[exId].push(log);
+  saveData(data);
+  render();
+}
+function deleteLog(exId, logId) {
+  data.logs[exId] = (data.logs[exId] || []).filter((l) => l.id !== logId);
+  saveData(data);
+  render();
+}
+
+// ---------- рендер ----------
+function barbellHTML(ratio) {
+  const plateCount = Math.max(1, Math.round(ratio * 5));
+  let plates = "";
+  for (let i = 0; i < plateCount; i++) {
+    const last = i === plateCount - 1;
+    const width = 8 + (last ? 4 : 0);
+    const height = 22 + i * 1.2;
+    const color = last ? "var(--brass)" : "var(--rust)";
+    const opacity = 0.55 + (i / plateCount) * 0.45;
+    plates += `<div class="plate" style="width:${width}px;height:${height}px;background:${color};opacity:${opacity}"></div>`;
+  }
+  return `<div class="barbell"><div class="hub"></div>${plates}<div class="rail"></div></div>`;
+}
+
+function chartSVG(sorted, unit) {
+  if (sorted.length < 2) {
+    return `<div class="chart-empty">Додай ще один запис, щоб побачити графік</div>`;
+  }
+  const w = 600, h = 90, padX = 8, padY = 12;
+  const weights = sorted.map((l) => l.weight);
+  const min = Math.min(...weights), max = Math.max(...weights);
+  const range = max - min || 1;
+  const stepX = (w - padX * 2) / (sorted.length - 1);
+  const points = sorted.map((l, i) => {
+    const x = padX + i * stepX;
+    const y = h - padY - ((l.weight - min) / range) * (h - padY * 2);
+    return { x, y, l };
+  });
+  const poly = points.map((p) => `${p.x},${p.y}`).join(" ");
+  const dots = points
+    .map(
+      (p) =>
+        `<circle cx="${p.x}" cy="${p.y}" r="3" fill="var(--brass)"><title>${fmtDate(p.l.date)}: ${p.l.weight} ${unit}</title></circle>`
+    )
+    .join("");
+  const gridLines = [0.25, 0.5, 0.75]
+    .map((f) => `<line x1="0" y1="${h * f}" x2="${w}" y2="${h * f}" stroke="var(--line)" stroke-dasharray="2 4"/>`)
+    .join("");
+  return `<svg class="chart" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    ${gridLines}
+    <polyline points="${poly}" fill="none" stroke="var(--brass)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    ${dots}
+  </svg>`;
+}
+
+function exerciseCardHTML(ex) {
+  const logs = data.logs[ex.id] || [];
+  const sorted = [...logs].sort((a, b) => a.date.localeCompare(b.date));
+  const last = sorted[sorted.length - 1];
+  const prev = sorted[sorted.length - 2];
+  const delta = last && prev ? +(last.weight - prev.weight).toFixed(1) : null;
+  const maxWeight = sorted.length ? Math.max(...sorted.map((l) => l.weight)) : 0;
+  const ratio = last && maxWeight ? Math.max(0.15, last.weight / maxWeight) : 0.3;
+  const isOpen = openCards.has(ex.id);
+  const isHistOpen = openHistory.has(ex.id);
+  const pattern = getExercisePattern(ex.name);
+
+  const deltaHTML = delta !== null
+    ? `<div class="delta" style="color:${delta > 0 ? "var(--up)" : delta < 0 ? "var(--brass)" : "var(--dim)"}">${delta > 0 ? "▲" : delta < 0 ? "▼" : "—"} ${Math.abs(delta)} ${ex.unit}</div>`
+    : "";
+
+  const weightHTML = last
+    ? `<div class="weight"><div class="num">${last.weight}<span class="unit">${esc(ex.unit)}</span></div>${deltaHTML}</div>`
+    : "";
+
+  const historyHTML = sorted.length
+    ? `<button class="history-toggle" data-action="toggle-history" data-id="${ex.id}">${isHistOpen ? "Сховати історію" : `Історія (${sorted.length})`}</button>
+       ${isHistOpen ? `<div class="history-list">${[...sorted].reverse().map((l) => `
+          <div class="history-row">
+            <span class="d">${fmtDate(l.date)}</span>
+            <span>${l.weight} ${esc(ex.unit)}${l.reps ? ` × ${l.reps}` : ""}</span>
+            <button class="del" data-action="delete-log" data-ex="${ex.id}" data-log="${l.id}">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>`).join("")}</div>` : ""}`
+    : "";
+
+  return `
+  <div class="card ${isOpen ? "open" : ""}" data-card="${ex.id}">
+    <button class="card-head" data-action="toggle-card" data-id="${ex.id}">
+      <div class="left">
+        <span class="icon">${iconSVG(pattern, 17, "var(--brass)")}</span>
+        <span class="name">${esc(ex.name)}</span>
+      </div>
+      <div class="right">
+        ${weightHTML}
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+    </button>
+    <div class="card-body">
+      ${barbellHTML(ratio)}
+      ${chartSVG(sorted, ex.unit)}
+      <form class="log-form" data-action="add-log" data-id="${ex.id}">
+        <div class="field w-date"><label>Дата</label><input type="date" name="date" value="${todayStr()}" required/></div>
+        <div class="field w-weight"><label>Вага (${esc(ex.unit)})</label><input type="number" name="weight" step="0.5" min="0" placeholder="0" required/></div>
+        <div class="field w-reps"><label>Повтори</label><input type="number" name="reps" min="0" placeholder="—"/></div>
+        <button type="submit" class="btn btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Записати
+        </button>
+        <button type="button" class="btn-ghost" data-action="delete-exercise" data-id="${ex.id}" title="Видалити вправу">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        </button>
+      </form>
+      ${historyHTML}
+    </div>
+  </div>`;
+}
+
+function totalSessions() {
+  const dates = new Set();
+  Object.values(data.logs).forEach((arr) => arr.forEach((l) => dates.add(l.date)));
+  return dates.size;
+}
+
+let showAddForm = false;
+
+function render() {
+  const app = document.getElementById("app");
+  const grouped = {};
+  data.exercises.forEach((ex) => {
+    const day = ex.day || "Інше";
+    (grouped[day] = grouped[day] || []).push(ex);
+  });
+  const days = DAY_ORDER.filter((d) => grouped[d]);
+  const sessions = totalSessions();
+
+  let daysHTML = days
+    .map(
+      (day) => `
+    <div>
+      <div class="day-header"><div class="day-tag">${day}</div><div class="rule"></div></div>
+      ${grouped[day].map(exerciseCardHTML).join("")}
+    </div>`
+    )
+    .join("");
+
+  if (!data.exercises.length) {
+    daysHTML = `<div class="empty-state">Ще немає жодної вправи.</div>`;
+  }
+
+  const addFormHTML = showAddForm
+    ? `
+    <form class="add-form" data-action="add-exercise">
+      <div class="field grow"><label>Назва вправи</label><input type="text" name="name" placeholder="Напр. Жим лежачи" autofocus required/></div>
+      <div class="field w-day"><label>День</label>
+        <select name="day">
+          <option>Понеділок</option><option>Середа</option><option>П'ятниця</option><option>Інше</option>
+        </select>
+      </div>
+      <div class="field w-unit"><label>Одиниця</label>
+        <select name="unit"><option value="кг">кг</option><option value="lb">lb</option></select>
+      </div>
+      <button type="submit" class="btn btn-primary" style="padding:8px 16px;font-size:12.5px">Додати</button>
+      <button type="button" class="btn-cancel" data-action="cancel-add">Скасувати</button>
+    </form>`
+    : `
+    <button class="btn-outline" data-action="show-add">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--brass)" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Додати вправу
+    </button>`;
+
+  app.innerHTML = `
+    <div class="header">
+      <div class="slash"></div>
+      <div class="row">
+        <h1>Прогресія</h1>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brass)" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      </div>
+      <p>ЗАЛ 3 РАЗИ НА ТИЖДЕНЬ&nbsp;·&nbsp;<b>${sessions}</b> ${sessions === 1 ? "ТРЕНУВАННЯ ЗАПИСАНО" : "ТРЕНУВАНЬ ЗАПИСАНО"}</p>
+    </div>
+    ${daysHTML}
+    <div style="margin-top: 12px">${addFormHTML}</div>
+  `;
+}
+
+// ---------- обробники подій (делегування) ----------
+document.addEventListener("click", (e) => {
+  const target = e.target.closest("[data-action]");
+  if (!target) return;
+  const action = target.dataset.action;
+
+  if (action === "toggle-card") {
+    const id = target.dataset.id;
+    if (openCards.has(id)) openCards.delete(id); else openCards.add(id);
+    render();
+  } else if (action === "toggle-history") {
+    const id = target.dataset.id;
+    if (openHistory.has(id)) openHistory.delete(id); else openHistory.add(id);
+    render();
+  } else if (action === "delete-exercise") {
+    e.stopPropagation();
+    deleteExercise(target.dataset.id);
+  } else if (action === "delete-log") {
+    deleteLog(target.dataset.ex, target.dataset.log);
+  } else if (action === "show-add") {
+    showAddForm = true;
+    render();
+  } else if (action === "cancel-add") {
+    showAddForm = false;
+    render();
+  }
+});
+
+document.addEventListener("submit", (e) => {
+  const form = e.target.closest("[data-action]");
+  if (!form) return;
+  e.preventDefault();
+  const action = form.dataset.action;
+
+  if (action === "add-log") {
+    const id = form.dataset.id;
+    const fd = new FormData(form);
+    const weight = parseFloat(fd.get("weight"));
+    const date = fd.get("date");
+    const reps = fd.get("reps");
+    if (!weight || weight <= 0 || !date) return;
+    openCards.add(id);
+    addLog(id, { id: uid(), date, weight, reps: reps ? parseInt(reps, 10) : null });
+  } else if (action === "add-exercise") {
+    const fd = new FormData(form);
+    const name = (fd.get("name") || "").trim();
+    if (!name) return;
+    showAddForm = false;
+    addExercise(name, fd.get("day"), fd.get("unit"));
+  }
+});
+
+render();
+</script>
+</body>
+</html>

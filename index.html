@@ -132,7 +132,6 @@
   .w-date { width: 118px; }
   .w-weight { width: 90px; }
   .w-reps { width: 84px; }
-  .w-sets { width: 74px; }
 
   .btn {
     border: none; border-radius: 2px; cursor: pointer; font-family: 'Oswald', sans-serif;
@@ -608,7 +607,6 @@ function exerciseCardHTML(ex) {
   </div>`;
 
   const repOptions = [8, 9, 10, 11, 12].map((r) => `<option value="${r}">${r}</option>`).join("");
-  const setOptions = [3, 4].map((s) => `<option value="${s}">${s}</option>`).join("");
 
   return `
   <div class="card ${isOpen ? "open" : ""}" data-card="${ex.id}">
@@ -630,7 +628,6 @@ function exerciseCardHTML(ex) {
         <div class="field w-date"><label>Дата</label><input type="date" name="date" value="${todayStr()}" required/></div>
         <div class="field w-weight"><label>Вага (${esc(ex.unit)})</label><input type="number" name="weight" step="0.5" min="0" placeholder="0" required/></div>
         <div class="field w-reps"><label>Повтори</label><select name="reps">${repOptions}</select></div>
-        <div class="field w-sets"><label>Підходи</label><select name="sets">${setOptions}</select></div>
         <button type="submit" class="btn btn-primary">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Записати
@@ -761,10 +758,9 @@ document.addEventListener("submit", (e) => {
     const weight = parseFloat(fd.get("weight"));
     const date = fd.get("date");
     const reps = parseInt(fd.get("reps"), 10);
-    const sets = parseInt(fd.get("sets"), 10);
     if (!weight || weight <= 0 || !date) return;
     openCards.add(id);
-    addLog(id, { id: uid(), date, weight, reps, sets });
+    addLog(id, { id: uid(), date, weight, reps, sets: 1 });
   } else if (action === "add-exercise") {
     const fd = new FormData(form);
     const name = (fd.get("name") || "").trim();

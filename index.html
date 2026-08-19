@@ -232,7 +232,8 @@ function seedExercises() {
     "Жим гантелей на похилій лаві",
     "Підтягування на турніку широким хватом з обтяженням",
     "Розведення гантелей на похилій лаві",
-    "Горизонтальна/вертикальна тяга в блоковому тренажері",
+    "Горизонтальна тяга в блоковому тренажері",
+    "Вертикальна тяга в блоковому тренажері",
     "Зведення рук у кросовер",
     "Прес нахил в блоці",
   ].map((n) => mk(n, "Понеділок"));
@@ -264,6 +265,20 @@ function seedExercises() {
 function migrateData(existing) {
   let changed = false;
   const counters = {};
+
+  const oldName = "Горизонтальна/вертикальна тяга в блоковому тренажері";
+  const idx = existing.exercises.findIndex((ex) => ex.name === oldName);
+  if (idx !== -1) {
+    const old = existing.exercises[idx];
+    const horizontal = { id: uid(), name: "Горизонтальна тяга в блоковому тренажері", unit: old.unit, day: old.day, order: old.order ?? 0 };
+    const vertical = { id: uid(), name: "Вертикальна тяга в блоковому тренажері", unit: old.unit, day: old.day, order: (old.order ?? 0) + 0.5 };
+    existing.exercises.splice(idx, 1, horizontal, vertical);
+    existing.logs[horizontal.id] = existing.logs[old.id] || [];
+    existing.logs[vertical.id] = [];
+    delete existing.logs[old.id];
+    changed = true;
+  }
+
   existing.exercises.forEach((ex) => {
     const day = ex.day || "Інше";
     if (typeof ex.order !== "number") {
